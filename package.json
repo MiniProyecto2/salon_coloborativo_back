@@ -1,0 +1,33 @@
+{
+  "name": "salon_coloborativo_back",
+  "version": "1.0.0",
+  "description": "��#\u0000 \u0000s\u0000a\u0000l\u0000o\u0000n\u0000_\u0000c\u0000o\u0000l\u0000o\u0000b\u0000o\u0000r\u0000a\u0000t\u0000i\u0000v\u0000o\u0000_\u0000b\u0000a\u0000c\u0000k\u0000\r\u0000 \u0000",
+  "main": "src/index.ts",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "dev": "tsx watch src/index.ts"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "module",
+  "dependencies": {
+    "cors": "^2.8.6",
+    "dotenv": "^18.0.9",
+    "express": "^5.3.0",
+    "firebase-admin": "^14.5.0"
+  },
+  "allowScripts": {
+    "@firebase/util@1.15.3": true,
+    "protobufjs@7.6.6": true
+  },
+  "devDependencies": {
+    "@types/cors": "^2.8.19",
+    "@types/express": "^5.0.6",
+    "@types/node": "^26.6.6",
+    "tsx": "^4.23.15",
+    "typescript": "^7.0.2"
+  }
+}
