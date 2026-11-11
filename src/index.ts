@@ -1,16 +1,8 @@
-import express from "express";
-import cors from "cors";
-import "dotenv/config";
-import mensajeRoutes from "./routes/mensajeRoutes.js";
+import app from "./app.js";
 
-const app = express();
-app.use(cors());
+const PORT = process.env.PORT || 8080;
 
-app.get('/', function (req, res) {
-    res.send('api funcionando');
-})
-
-app.use("/api", mensajeRoutes)
-
-const port = process.env.PORT || 3000;
-app.listen(port, () => console.log(`Server running at ${port}...`));
+app.listen(PORT, () => {
+  console.log(`🚀 Server is running on: http://localhost:${PORT}`);
+  console.log(`📚 API Documentation: http://localhost:${PORT}/api-docs`);
+});
