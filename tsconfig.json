@@ -41,6 +41,9 @@
     "moduleDetection": "force",
     "skipLibCheck": true,
     "esModuleInterop": true,
+
+    // JSON Modules
+    "resolveJsonModule": true
   },
   "include": ["src/**/*"]
 }
