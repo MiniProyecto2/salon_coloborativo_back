@@ -1,8 +1,17 @@
 import express from "express";
 import userRoutes from "./user.routes.js";
+import mensajeRoutes from "./mensajeRoutes.js";
 
 const router = express.Router();
 
-router.use("/", userRoutes);
+// Pública: la usan Render y Docker para saber si el servicio está vivo.
+router.get("/health", (_req, res) => {
+  // #swagger.tags = ['Sistema']
+  // #swagger.summary = 'Estado del servicio (pública)'
+  res.json({ status: "ok" });
+});
+
+router.use("/users", userRoutes);
+router.use("/", mensajeRoutes);
 
 export default router;

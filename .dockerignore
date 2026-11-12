@@ -1,5 +1,9 @@
 node_modules
+dist
+build
 *.log
 .env
-build
-dist
+.env.*
+!.env.example
+.git
+README.md

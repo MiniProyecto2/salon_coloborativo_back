@@ -3,16 +3,192 @@
   "info": {
     "version": "v1.0.0",
     "title": "Salon Colaborativo API",
-    "description": "SalonColaborativo es una plataforma que permite la interacción sincronica entre usuarios por medio de chats, videollamadas, compartir pantalla y otras herramientas basicas de apoyo al estudio."
+    "description": "SalonColaborativo es una plataforma que permite la interacción sincronica entre usuarios por medio de chats, videollamadas, compartir pantalla y otras herramientas basicas de apoyo al estudio.\n\nAutenticación: inicia sesión en el frontend con Firebase (correo o Google) y envía el ID token en `Authorization: Bearer <token>`. En Swagger usa el botón **Authorize**."
   },
   "host": "localhost:3000",
   "basePath": "/api/v1",
+  "tags": [
+    {
+      "name": "Sistema",
+      "description": "Estado del servicio"
+    },
+    {
+      "name": "Usuarios",
+      "description": "Perfiles de usuario (requieren sesión)"
+    },
+    {
+      "name": "Mensajes",
+      "description": "Consulta de mensajes (requieren sesión)"
+    }
+  ],
   "schemes": [
     "http"
   ],
+  "securityDefinitions": {
+    "bearerAuth": {
+      "type": "apiKey",
+      "in": "header",
+      "name": "Authorization",
+      "description": "Escribe: Bearer <ID token de Firebase>"
+    }
+  },
   "paths": {
+    "/health": {
+      "get": {
+        "tags": [
+          "Sistema"
+        ],
+        "summary": "Estado del servicio (pública)",
+        "description": "",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/users/me": {
+      "post": {
+        "tags": [
+          "Usuarios"
+        ],
+        "summary": "Crea el perfil del usuario autenticado (primer inicio de sesión)",
+        "description": "",
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/CrearPerfil"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Perfil creado",
+            "schema": {
+              "$ref": "#/definitions/Perfil"
+            }
+          },
+          "400": {
+            "description": "Datos inválidos",
+            "schema": {
+              "$ref": "#/definitions/ErrorValidacion"
+            }
+          },
+          "401": {
+            "description": "Sin sesión válida (no autorizado)",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "409": {
+            "description": "Perfil existente o nombre de usuario en uso",
+            "schema": {
+              "$ref": "#/definitions/ErrorValidacion"
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      },
+      "get": {
+        "tags": [
+          "Usuarios"
+        ],
+        "summary": "Devuelve el perfil del usuario autenticado",
+        "description": "",
+        "responses": {
+          "200": {
+            "description": "Perfil del usuario",
+            "schema": {
+              "$ref": "#/definitions/Perfil"
+            }
+          },
+          "401": {
+            "description": "Sin sesión válida (no autorizado)",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "404": {
+            "description": "El usuario aún no tiene perfil",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      },
+      "patch": {
+        "tags": [
+          "Usuarios"
+        ],
+        "summary": "Actualiza el perfil del usuario autenticado",
+        "description": "",
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/ActualizarPerfil"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Perfil actualizado",
+            "schema": {
+              "$ref": "#/definitions/Perfil"
+            }
+          },
+          "400": {
+            "description": "Datos inválidos",
+            "schema": {
+              "$ref": "#/definitions/ErrorValidacion"
+            }
+          },
+          "401": {
+            "description": "Sin sesión válida (no autorizado)",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "404": {
+            "description": "El usuario aún no tiene perfil",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "409": {
+            "description": "Nombre de usuario en uso",
+            "schema": {
+              "$ref": "#/definitions/ErrorValidacion"
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
     "/1/{id}": {
       "get": {
+        "tags": [
+          "Mensajes"
+        ],
+        "summary": "Consulta un documento de Firestore (ruta de prueba, privada)",
         "description": "",
         "parameters": [
           {
@@ -26,12 +202,146 @@
           "200": {
             "description": "OK"
           },
+          "401": {
+            "description": "Sin sesión válida (no autorizado)",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
           "404": {
             "description": "Not Found"
           },
           "500": {
             "description": "Internal Server Error"
           }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    }
+  },
+  "definitions": {
+    "Error": {
+      "type": "object",
+      "properties": {
+        "error": {
+          "type": "string",
+          "example": "no autorizado"
+        }
+      }
+    },
+    "ErrorValidacion": {
+      "type": "object",
+      "properties": {
+        "error": {
+          "type": "string",
+          "example": "Datos inválidos"
+        },
+        "details": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "field": {
+                "type": "string",
+                "example": "username"
+              },
+              "message": {
+                "type": "string",
+                "example": "El nombre de usuario ya está en uso"
+              }
+            }
+          }
+        }
+      }
+    },
+    "CrearPerfil": {
+      "type": "object",
+      "properties": {
+        "username": {
+          "type": "string",
+          "example": "nico_dev"
+        },
+        "displayName": {
+          "type": "string",
+          "example": "Nicolás Mosorongo"
+        },
+        "photoURL": {
+          "type": "string",
+          "example": "https://example.com/foto.png"
+        },
+        "bio": {
+          "type": "string",
+          "example": "Estudiante de Univalle"
+        }
+      },
+      "required": [
+        "username",
+        "displayName"
+      ]
+    },
+    "ActualizarPerfil": {
+      "type": "object",
+      "properties": {
+        "username": {
+          "type": "string",
+          "example": "nico_dev"
+        },
+        "displayName": {
+          "type": "string",
+          "example": "Nicolás Mosorongo"
+        },
+        "photoURL": {
+          "type": "string",
+          "example": "https://example.com/foto.png"
+        },
+        "bio": {
+          "type": "string",
+          "example": "Estudiante de Univalle"
+        }
+      }
+    },
+    "Perfil": {
+      "type": "object",
+      "properties": {
+        "uid": {
+          "type": "string",
+          "example": "k3J9...firebase-uid"
+        },
+        "email": {
+          "type": "string",
+          "example": "nico@correo.com"
+        },
+        "username": {
+          "type": "string",
+          "example": "nico_dev"
+        },
+        "displayName": {
+          "type": "string",
+          "example": "Nicolás Mosorongo"
+        },
+        "photoURL": {
+          "type": "string",
+          "example": "https://example.com/foto.png"
+        },
+        "bio": {
+          "type": "string",
+          "example": "Estudiante de Univalle"
+        },
+        "provider": {
+          "type": "string",
+          "example": "password"
+        },
+        "createdAt": {
+          "type": "string",
+          "example": "2026-11-12T15:00:00.000Z"
+        },
+        "updatedAt": {
+          "type": "string",
+          "example": "2026-11-12T15:00:00.000Z"
         }
       }
     }

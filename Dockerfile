@@ -1,22 +1,31 @@
-# Use an official Node.js runtime as a parent image
-FROM node:22-alpine
-
-# Set the working directory in the container
+# ---------- Etapa 1: compilar TypeScript ----------
+FROM node:22-alpine AS build
 WORKDIR /usr/src/app
 
-# Copy package.json and package-lock.json to the container
 COPY package*.json ./
+RUN npm ci
 
-# Install dependencies
-RUN npm install 
-
-# Copy the rest of the application source code to the container
-COPY . .
-
+COPY tsconfig.json ./
+COPY src ./src
 RUN npm run build
 
-# Expose port 3000 to the outside world
+# ---------- Etapa 2: imagen final (solo producción) ----------
+FROM node:22-alpine AS runtime
+ENV NODE_ENV=production
+WORKDIR /usr/src/app
+
+COPY package*.json ./
+RUN npm ci --omit=dev && npm cache clean --force
+
+COPY --from=build /usr/src/app/dist ./dist
+
+# No ejecutar como root
+USER node
+
+# Render define PORT automáticamente; en local se usa 3000
 EXPOSE 3000
 
-# Command to run the application
-CMD ["npm", "start"]
+HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
+  CMD wget -qO- http://localhost:${PORT:-3000}/api/v1/health || exit 1
+
+CMD ["node", "dist/index.js"]

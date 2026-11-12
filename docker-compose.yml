@@ -1,8 +1,13 @@
+# Levanta solo el backend. Para todo el sistema (frontend + backend) usa
+# el docker-compose.yml de la raíz del repositorio (ver README).
 services:
   backend:
     build: .
     container_name: salon_backend
     env_file:
       - .env
+    environment:
+      PORT: 3000
     ports:
       - "3000:3000"
+    restart: unless-stopped
