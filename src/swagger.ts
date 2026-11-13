@@ -21,6 +21,7 @@ const doc = {
     }
   },
   definitions: {
+    Diagnostico: { message: 'Conexión con Firestore funcionando' },
     Error: { error: 'no autorizado' },
     ErrorValidacion: {
       error: 'Datos inválidos',

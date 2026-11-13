@@ -4,3 +4,6 @@ dist
 .env.*
 !.env.example
 *.log
+*firebase-adminsdk*.json
+*.zip
+*.7z
