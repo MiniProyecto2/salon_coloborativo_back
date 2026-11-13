@@ -13,6 +13,12 @@ export const obtenerDiagnostico = async (): Promise<{ message: string } | null> 
 
   try {
     const doc = await Promise.race([lectura, limite]);
+    console.log('DEBUG diagnostico', {
+        projectId: process.env.FIREBASE_PROJECT_ID,
+        existe: doc.exists,
+        tipo: typeof doc.data()?.message,
+        colecciones: (await db.listCollections()).map((c) => c.id),
+    });
     const message = doc.exists ? doc.data()?.message : undefined;
     return typeof message === 'string' ? { message } : null;
   } finally {
