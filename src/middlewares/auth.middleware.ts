@@ -16,9 +16,10 @@ export const requireAuth: RequestHandler = async (req, res, next) => {
   const token = header.slice('Bearer '.length).trim();
 
   try {
-    const decoded = await auth.verifyIdToken(token);
+    const decoded = await auth.verifyIdToken(token, true);
     req.user = {
       uid: decoded.uid,
+      authTime: decoded.auth_time,
       email: decoded.email ?? null,
       name: typeof decoded.name === 'string' ? decoded.name : null,
       picture: typeof decoded.picture === 'string' ? decoded.picture : null,

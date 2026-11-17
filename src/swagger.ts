@@ -2,7 +2,7 @@ import swaggerAutogen from 'swagger-autogen';
 
 const doc = {
   info: {
-    version: 'v1.0.0',
+    version: 'v1.1.0',
     title: 'Salon Colaborativo API',
     description: 'SalonColaborativo es una plataforma que permite la interacción sincronica entre usuarios por medio de chats, videollamadas, compartir pantalla y otras herramientas basicas de apoyo al estudio.\n\nAutenticación: inicia sesión en el frontend con Firebase (correo o Google) y envía el ID token en `Authorization: Bearer <token>`. En Swagger usa el botón **Authorize**.'
   },
@@ -10,6 +10,7 @@ const doc = {
   tags: [
     { name: 'Sistema', description: 'Estado del servicio' },
     { name: 'Usuarios', description: 'Perfiles de usuario (requieren sesión)' },
+    { name: 'Salas', description: 'Gestión de salas propias (requiere sesión)' },
     { name: 'Mensajes', description: 'Consulta de mensajes (requieren sesión)' }
   ],
   securityDefinitions: {
@@ -21,6 +22,23 @@ const doc = {
     }
   },
   definitions: {
+    ActualizarCorreo: { $email: 'nuevo@correo.com' },
+    CrearSala: {
+      $nombre: 'Grupo de cálculo',
+      $materia: 'Matemáticas',
+      descripcion: 'Preparación del parcial',
+      $publica: false
+    },
+    RenombrarSala: { $nombre: 'Grupo de cálculo II' },
+    Sala: {
+      id: '9u0XbRiQ30FP63sfwP4z',
+      ownerUid: 'firebase-uid',
+      nombre: 'Grupo de cálculo',
+      materia: 'Matemáticas',
+      descripcion: 'Preparación del parcial',
+      publica: false,
+      createdAt: '2026-11-17T15:00:00.000Z'
+    },
     Diagnostico: { message: 'Conexión con Firestore funcionando' },
     Error: { error: 'no autorizado' },
     ErrorValidacion: {

@@ -1,13 +1,37 @@
-# Levanta solo el backend. Para todo el sistema (frontend + backend) usa
-# el docker-compose.yml de la raíz del repositorio (ver README).
 services:
-  backend:
+  api:
     build: .
-    container_name: salon_backend
     env_file:
       - .env
     environment:
       PORT: 3000
     ports:
       - "3000:3000"
+    restart: unless-stopped
+
+  realtime:
+    build:
+      context: .
+      dockerfile: Dockerfile.realtime
+    env_file:
+      - .env
+    environment:
+      PORT: 3001
+    ports:
+      - "3001:3001"
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: ../salon_colaboratico_front
+      args:
+        VITE_API_URL: ${VITE_API_URL:-http://localhost:3000}
+        VITE_FIREBASE_API_KEY: ${VITE_FIREBASE_API_KEY}
+        VITE_FIREBASE_AUTH_DOMAIN: ${VITE_FIREBASE_AUTH_DOMAIN}
+        VITE_FIREBASE_PROJECT_ID: ${VITE_FIREBASE_PROJECT_ID}
+        VITE_FIREBASE_STORAGE_BUCKET: ${VITE_FIREBASE_STORAGE_BUCKET}
+        VITE_FIREBASE_MESSAGING_SENDER_ID: ${VITE_FIREBASE_MESSAGING_SENDER_ID}
+        VITE_FIREBASE_APP_ID: ${VITE_FIREBASE_APP_ID}
+    ports:
+      - "5173:80"
     restart: unless-stopped

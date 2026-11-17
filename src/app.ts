@@ -5,16 +5,11 @@ import routes from './routes/index.js';
 import swaggerUi from 'swagger-ui-express';
 import swaggerDocument from './swagger-output.json' with { type: 'json' };
 import { errorHandler, notFound } from './middlewares/error.middleware.js';
+import { allowedOrigins } from './config/cors.js';
 
 dotenv.config({ quiet: true });
 
 const app = express();
-
-// CORS_ORIGIN admite varios orígenes separados por coma (p. ej. localhost y la URL de Vercel).
-const allowedOrigins = (process.env.CORS_ORIGIN ?? 'http://localhost:5173')
-  .split(',')
-  .map((origin) => origin.trim().replace(/\/$/, ''))
-  .filter(Boolean);
 
 app.use(cors({ origin: allowedOrigins, credentials: true }));
 app.use(express.json({ limit: '16kb' }));

@@ -1,5 +1,6 @@
 export interface AuthUser {
   uid: string;
+  authTime: number;
   email: string | null;
   name: string | null;
   picture: string | null;

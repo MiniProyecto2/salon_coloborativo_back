@@ -1,5 +1,6 @@
 import express from "express";
 import userRoutes from "./user.routes.js";
+import roomRoutes from "./room.routes.js";
 import mensajeRoutes from "./mensajeRoutes.js";
 import diagnosticoRoutes from "./diagnostico.routes.js";
 
@@ -14,6 +15,7 @@ router.get("/health", (_req, res) => {
 
 router.use(diagnosticoRoutes);
 router.use("/users", userRoutes);
+router.use("/rooms", roomRoutes);
 router.use("/", mensajeRoutes);
 
 export default router;

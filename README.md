@@ -35,18 +35,50 @@ src/
 | POST | `/users/me` | Privado | Crea el perfil (`username` y `displayName` obligatorios) |
 | GET | `/users/me` | Privado | Devuelve el perfil |
 | PATCH | `/users/me` | Privado | Actualiza `username`, `displayName`, `photoURL`, `bio` |
+| PATCH | `/users/me/email` | Privado | Actualiza el correo de Firebase Auth. Requiere inicio de sesión en los últimos 10 minutos |
+| DELETE | `/users/me` | Privado | Elimina el perfil, las salas propias y la cuenta de Firebase Auth. Libera el nombre de usuario |
+| GET | `/rooms` | Privado | Lista las salas creadas por el usuario autenticado |
+| POST | `/rooms` | Privado | Crea una sala con ID generado en Firestore |
+| PATCH | `/rooms/:id` | Privado | Renombra una sala propia con `{ "nombre": "..." }` |
+| DELETE | `/rooms/:id` | Privado | Elimina una sala propia |
 | GET | `/1/:id` | Privado | Consulta de prueba a Firestore |
 
-Errores: `400` datos inválidos (con `details` por campo), `401` no autorizado, `404` no encontrado, `409` nombre de usuario en uso.
-El nombre de usuario es único y se valida en el servidor (colección `usernames`, dentro de una transacción de Firestore).
+Firestore reserva el nombre de usuario sin distinguir mayúsculas. Firebase Auth es la fuente del correo y comprueba su unicidad. Ambas colisiones devuelven `409` con el campo en `details`. Para salas ajenas se devuelve el mismo `404` que para un ID inexistente.
+
+El borrado de cuenta quita los datos del perfil y libera su nombre, elimina las salas por lotes y termina eliminando la cuenta de Auth. Una marca temporal bloquea altas de perfil y salas durante el proceso. Si el borrado falla antes de eliminar Auth, se puede reintentar con la misma cuenta. La colección de mensajes de diagnóstico es compartida y queda fuera del borrado porque no contiene registros por usuario.
 
 ## Configuración local
-1. Node.js 20+ y Docker instalados.
-2. `cp .env.example .env` y completa las credenciales del Admin SDK de Firebase.
-3. Sin Docker: `npm install` y `npm run dev`.
-4. Con Docker: `docker compose up --build` (API en http://localhost:3000, Swagger en http://localhost:3000/api-docs).
+Clona los dos repositorios como carpetas hermanas con sus nombres originales. Copia cada `.env.example` a `.env` y completa las variables. Incluye `http://localhost:5173` en `CORS_ORIGIN` de la API.
 
-> Todo el sistema (frontend + backend): usa el `docker-compose.yml` de la raíz del repositorio → `docker compose up --build`.
+Desde el repositorio del backend, levanta los tres contenedores con:
+
+```sh
+docker compose --env-file ../salon_colaboratico_front/.env up --build
+```
+
+Los puertos locales son 5173 para el frontend, 3000 para la API y 3001 para Socket.IO. El frontend usa Firebase Auth desde el navegador y consulta los datos por HTTP a la API.
+
+### Prueba con emuladores
+
+Firebase CLI actual requiere Java 21 o superior. Con Java 17 puedes ejecutar la misma prueba usando `firebase-tools@14.12.1`.
+
+```sh
+npm ci
+npx firebase-tools emulators:exec --config test/firebase.json --project demo-sprint2 --only auth,firestore "npm test"
+```
+
+### Socket.IO
+
+El servicio usa la ruta estándar `/socket.io/`. Envía el ID token de Firebase en `auth.token`; el servidor responde con `session:ready` y el `uid`. Rechaza tokens ausentes, inválidos o revocados y cierra la conexión cuando expira el token. Para reconectar, el cliente debe enviar un token vigente.
+
+```js
+const socket = io(urlTiempoReal, {
+  auth: { token: await auth.currentUser.getIdToken() },
+});
+socket.on("session:ready", ({ uid }) => console.log(uid));
+```
+
+`GET /health` comprueba la disponibilidad de este servicio sin iniciar sesión.
 
 ## Swagger
 Cada vez que agregues o cambies un endpoint, regenera la documentación y súbela al repositorio:
@@ -55,13 +87,16 @@ npm run swagger
 ```
 Disponible en `/api-docs` (en Render: `https://<tu-servicio>.onrender.com/api-docs`). Usa **Authorize** y pega el ID token para probar rutas privadas.
 
-## Firestore: reglas de seguridad
-`firestore.rules` bloquea todo acceso desde clientes; solo el backend (Admin SDK) lee y escribe. Publícalas en Firebase Console → Firestore → Reglas.
+## Firestore
+
+La API usa el Admin SDK. Las colecciones `users`, `usernames` y `rooms` deben impedir el acceso directo desde clientes en las reglas del proyecto de Firebase.
 
 ## Despliegue
-**Backend en Render** (Web Service, Runtime *Docker*, raíz = carpeta de este servicio, Health Check Path `/api/v1/health`). Variables de entorno: `CORS_ORIGIN` (URL de Vercel), `FIREBASE_PROJECT_ID`, `FIREBASE_CLIENT_EMAIL`, `FIREBASE_PRIVATE_KEY`. No definas `PORT`: Render lo asigna.
+**API en Render.** Conserva el Web Service de la API con `Dockerfile` y el health check `/api/v1/health`.
 
-**Frontend en Vercel**: variable `VITE_API_URL=https://<tu-servicio>.onrender.com/api/v1` y las `VITE_FIREBASE_*` del proyecto web.
+**Socket.IO en Render.** Crea un Web Service Docker con `Dockerfile.realtime` y el health check `/health`. El archivo `render.yaml` describe este servicio. Ambos servicios usan el mismo proyecto de Firebase y requieren `CORS_ORIGIN`, `FIREBASE_PROJECT_ID`, `FIREBASE_CLIENT_EMAIL` y `FIREBASE_PRIVATE_KEY`. Render asigna `PORT`.
+
+**Frontend en Vercel.** Configura `VITE_API_URL` con la URL de la API de Render y las variables `VITE_FIREBASE_*` del proyecto web.
 
 ## Seguridad de credenciales
 Las claves viven solo en variables de entorno. `.env` está en `.gitignore` y `.dockerignore`; el repositorio solo contiene `.env.example`.

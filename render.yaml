@@ -1,0 +1,16 @@
+services:
+  - type: web
+    name: salon-colaborativo-realtime
+    runtime: docker
+    plan: free
+    dockerfilePath: ./Dockerfile.realtime
+    healthCheckPath: /health
+    envVars:
+      - key: CORS_ORIGIN
+        sync: false
+      - key: FIREBASE_PROJECT_ID
+        sync: false
+      - key: FIREBASE_CLIENT_EMAIL
+        sync: false
+      - key: FIREBASE_PRIVATE_KEY
+        sync: false

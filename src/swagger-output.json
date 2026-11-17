@@ -1,7 +1,7 @@
 {
   "swagger": "2.0",
   "info": {
-    "version": "v1.0.0",
+    "version": "v1.1.0",
     "title": "Salon Colaborativo API",
     "description": "SalonColaborativo es una plataforma que permite la interacción sincronica entre usuarios por medio de chats, videollamadas, compartir pantalla y otras herramientas basicas de apoyo al estudio.\n\nAutenticación: inicia sesión en el frontend con Firebase (correo o Google) y envía el ID token en `Authorization: Bearer <token>`. En Swagger usa el botón **Authorize**."
   },
@@ -15,6 +15,10 @@
     {
       "name": "Usuarios",
       "description": "Perfiles de usuario (requieren sesión)"
+    },
+    {
+      "name": "Salas",
+      "description": "Gestión de salas propias (requiere sesión)"
     },
     {
       "name": "Mensajes",
@@ -210,6 +214,221 @@
             "bearerAuth": []
           }
         ]
+      },
+      "delete": {
+        "tags": [
+          "Usuarios"
+        ],
+        "summary": "Elimina el perfil, las salas propias y la cuenta de Firebase. Libera el usuario.",
+        "description": "",
+        "responses": {
+          "204": {
+            "description": "Cuenta eliminada"
+          },
+          "401": {
+            "description": "Sin sesión válida"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/users/me/email": {
+      "patch": {
+        "tags": [
+          "Usuarios"
+        ],
+        "summary": "Cambia el correo en Firebase Authentication",
+        "description": "",
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/ActualizarCorreo"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Correo actualizado",
+            "schema": {
+              "$ref": "#/definitions/Perfil"
+            }
+          },
+          "400": {
+            "description": "Correo inválido"
+          },
+          "401": {
+            "description": "Sin sesión válida"
+          },
+          "403": {
+            "description": "Se requiere iniciar sesión de nuevo"
+          },
+          "404": {
+            "description": "Perfil no encontrado"
+          },
+          "409": {
+            "description": "Correo en uso",
+            "schema": {
+              "$ref": "#/definitions/ErrorValidacion"
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/rooms/": {
+      "get": {
+        "tags": [
+          "Salas"
+        ],
+        "summary": "Lista únicamente las salas propias",
+        "description": "",
+        "responses": {
+          "200": {
+            "description": "Salas propias",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/Sala"
+              },
+              "xml": {
+                "name": "main"
+              }
+            }
+          },
+          "401": {
+            "description": "Sin sesión válida"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      },
+      "post": {
+        "tags": [
+          "Salas"
+        ],
+        "summary": "Crea una sala propia con ID único",
+        "description": "",
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/CrearSala"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Sala creada",
+            "schema": {
+              "$ref": "#/definitions/Sala"
+            }
+          },
+          "400": {
+            "description": "Datos inválidos"
+          },
+          "401": {
+            "description": "Sin sesión válida"
+          },
+          "404": {
+            "description": "Perfil no encontrado"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/rooms/{id}": {
+      "patch": {
+        "tags": [
+          "Salas"
+        ],
+        "summary": "Renombra una sala propia",
+        "description": "",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/RenombrarSala"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Sala renombrada"
+          },
+          "400": {
+            "description": "Datos inválidos"
+          },
+          "401": {
+            "description": "Sin sesión válida"
+          },
+          "404": {
+            "description": "La sala no existe o pertenece a otro usuario"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      },
+      "delete": {
+        "tags": [
+          "Salas"
+        ],
+        "summary": "Elimina una sala propia",
+        "description": "",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Sala eliminada"
+          },
+          "401": {
+            "description": "Sin sesión válida"
+          },
+          "404": {
+            "description": "La sala no existe o pertenece a otro usuario"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
       }
     },
     "/1/{id}": {
@@ -253,6 +472,89 @@
     }
   },
   "definitions": {
+    "ActualizarCorreo": {
+      "type": "object",
+      "properties": {
+        "email": {
+          "type": "string",
+          "example": "nuevo@correo.com"
+        }
+      },
+      "required": [
+        "email"
+      ]
+    },
+    "CrearSala": {
+      "type": "object",
+      "properties": {
+        "nombre": {
+          "type": "string",
+          "example": "Grupo de cálculo"
+        },
+        "materia": {
+          "type": "string",
+          "example": "Matemáticas"
+        },
+        "descripcion": {
+          "type": "string",
+          "example": "Preparación del parcial"
+        },
+        "publica": {
+          "type": "boolean",
+          "example": false
+        }
+      },
+      "required": [
+        "nombre",
+        "materia",
+        "publica"
+      ]
+    },
+    "RenombrarSala": {
+      "type": "object",
+      "properties": {
+        "nombre": {
+          "type": "string",
+          "example": "Grupo de cálculo II"
+        }
+      },
+      "required": [
+        "nombre"
+      ]
+    },
+    "Sala": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "example": "9u0XbRiQ30FP63sfwP4z"
+        },
+        "ownerUid": {
+          "type": "string",
+          "example": "firebase-uid"
+        },
+        "nombre": {
+          "type": "string",
+          "example": "Grupo de cálculo"
+        },
+        "materia": {
+          "type": "string",
+          "example": "Matemáticas"
+        },
+        "descripcion": {
+          "type": "string",
+          "example": "Preparación del parcial"
+        },
+        "publica": {
+          "type": "boolean",
+          "example": false
+        },
+        "createdAt": {
+          "type": "string",
+          "example": "2026-11-17T15:00:00.000Z"
+        }
+      }
+    },
     "Diagnostico": {
       "type": "object",
       "properties": {

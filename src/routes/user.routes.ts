@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { requireAuth } from '../middlewares/auth.middleware.js';
-import { createProfile, getProfile, updateProfile } from '../services/userService.js';
+import { createProfile, deleteAccount, getProfile, updateEmail, updateProfile } from '../services/userService.js';
 
 const router = Router();
 
@@ -49,6 +49,30 @@ router.patch('/me', async (req, res) => {
   /* #swagger.responses[409] = { description: 'Nombre de usuario en uso', schema: { $ref: '#/definitions/ErrorValidacion' } } */
   const profile = await updateProfile(req.user!.uid, req.body);
   res.json(profile);
+});
+
+router.patch('/me/email', async (req, res) => {
+  // #swagger.tags = ['Usuarios']
+  // #swagger.summary = 'Cambia el correo en Firebase Authentication'
+  // #swagger.security = [{ "bearerAuth": [] }]
+  /* #swagger.parameters['body'] = { in: 'body', required: true, schema: { $ref: '#/definitions/ActualizarCorreo' } } */
+  /* #swagger.responses[200] = { description: 'Correo actualizado', schema: { $ref: '#/definitions/Perfil' } } */
+  /* #swagger.responses[400] = { description: 'Correo inválido' } */
+  /* #swagger.responses[401] = { description: 'Sin sesión válida' } */
+  /* #swagger.responses[403] = { description: 'Se requiere iniciar sesión de nuevo' } */
+  /* #swagger.responses[404] = { description: 'Perfil no encontrado' } */
+  /* #swagger.responses[409] = { description: 'Correo en uso', schema: { $ref: '#/definitions/ErrorValidacion' } } */
+  res.json(await updateEmail(req.user!.uid, req.user!.authTime, req.body));
+});
+
+router.delete('/me', async (req, res) => {
+  // #swagger.tags = ['Usuarios']
+  // #swagger.summary = 'Elimina el perfil, las salas propias y la cuenta de Firebase. Libera el usuario.'
+  // #swagger.security = [{ "bearerAuth": [] }]
+  /* #swagger.responses[204] = { description: 'Cuenta eliminada' } */
+  /* #swagger.responses[401] = { description: 'Sin sesión válida' } */
+  await deleteAccount(req.user!.uid);
+  res.sendStatus(204);
 });
 
 export default router;
