@@ -8,6 +8,7 @@
     "build": "tsc",
     "start": "node dist/index.js",
     "start:realtime": "node dist/realtime.js",
+    "dev:realtime": "tsx watch src/realtime.ts",
     "dev": "tsx watch src/index.ts",
     "swagger": "tsx src/swagger.ts"
   },
