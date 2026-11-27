@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { HttpError } from '../errors/HttpError.js';
 import { requireAuth } from '../middlewares/auth.middleware.js';
-import { crearSala, listarSalas, modificarSala } from '../repositories/roomRepository.js';
+import { crearSala, listarSalas, modificarSala, consultarSala } from '../repositories/roomRepository.js';
 
 const router = Router();
 router.use(requireAuth);
@@ -22,6 +22,17 @@ router.get('/', async (req, res) => {
   /* #swagger.responses[200] = { description: 'Salas propias', schema: [{ $ref: '#/definitions/Sala' }] } */
   /* #swagger.responses[401] = { description: 'Sin sesión válida' } */
   res.json(await listarSalas(req.user!.uid));
+});
+
+router.get('/:id', async (req, res) => {
+  // #swagger.tags = ['Salas']
+  // #swagger.summary = 'Consulta una sala por su ID (para unirse)'
+  // #swagger.security = [{ "bearerAuth": [] }]
+  /* #swagger.responses[200] = { description: 'Sala encontrada', schema: { $ref: '#/definitions/Sala' } } */
+  /* #swagger.responses[401] = { description: 'Sin sesión válida' } */
+  /* #swagger.responses[403] = { description: 'La sala es privada' } */
+  /* #swagger.responses[404] = { description: 'La sala no existe' } */
+  res.json(await consultarSala(req.params.id, req.user!.uid));
 });
 
 router.post('/', async (req, res) => {

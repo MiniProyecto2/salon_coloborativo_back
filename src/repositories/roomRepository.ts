@@ -3,6 +3,8 @@ import { HttpError } from '../errors/HttpError.js';
 
 export const rooms = db.collection('rooms');
 
+export const ID_SALA = /^[A-Za-z0-9]{20}$/;
+
 export const listarSalas = async (uid: string) => {
   const snapshot = await rooms.where('ownerUid', '==', uid).get();
   return snapshot.docs.map(doc => doc.data()).sort((a, b) => b.createdAt.localeCompare(a.createdAt));
@@ -21,8 +23,17 @@ export const crearSala = async (ownerUid: string, input: {
   return room;
 };
 
+export const consultarSala = async (id: string, uid: string) => {
+  if (!ID_SALA.test(id)) throw new HttpError(404, 'Sala no encontrada');
+  const snap = await rooms.doc(id).get();
+  if (!snap.exists) throw new HttpError(404, 'Sala no encontrada');
+  const room = snap.data()!;
+  if (!room.publica && room.ownerUid !== uid) throw new HttpError(403, 'La sala es privada');
+  return room;
+};
+
 export const modificarSala = async (uid: string, id: string, nombre?: string) => {
-  if (!/^[A-Za-z0-9]{20}$/.test(id)) throw new HttpError(404, 'Sala no encontrada');
+  if (!ID_SALA.test(id)) throw new HttpError(404, 'Sala no encontrada');
   const ref = rooms.doc(id);
   await db.runTransaction(async tx => {
     const room = await tx.get(ref);
